@@ -1,7 +1,8 @@
-import { __prod__ } from './constants'
-import { Post } from './entities/Post'
 import { MikroORM } from '@mikro-orm/core'
 import path from 'path'
+import { __prod__ } from './constants'
+import { Post } from './entities/Post'
+import { User } from './entities/User'
 
 export default {
   migrations: {
@@ -10,7 +11,7 @@ export default {
   },
   user: 'postgres',
   password: 'sromano',
-  entities: [Post],
+  entities: [Post, User],
   dbName: 'lireddit',
   type: 'postgresql',
   debug: !__prod__,

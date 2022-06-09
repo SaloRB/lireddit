@@ -1,5 +1,6 @@
 import { MikroORM /*, RequiredEntityData */ } from '@mikro-orm/core'
 import { ApolloServer } from 'apollo-server-express'
+import cors from 'cors'
 import express from 'express'
 import session from 'express-session'
 import { createClient } from 'redis'
@@ -10,7 +11,6 @@ import microConfig from './mikro-orm.config'
 import { HelloResolver } from './resolvers/hello'
 import { PostResolver } from './resolvers/post'
 import { UserResolver } from './resolvers/user'
-import { MyContext } from './types'
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig)
@@ -20,6 +20,13 @@ const main = async () => {
 
   const RedisStore = require('connect-redis')(session)
   const redisClient = createClient()
+
+  app.use(
+    cors({
+      origin: ['http://localhost:3000', 'https://studio.apollographql.com'],
+      credentials: true,
+    })
+  )
 
   app.use(
     session({
@@ -45,12 +52,19 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => <MyContext>{ em: orm.em, req, res },
+    context: ({ req, res }) => ({
+      em: orm.em,
+      req,
+      res,
+    }),
   })
 
   await apolloServer.start()
 
-  apolloServer.applyMiddleware({ app })
+  apolloServer.applyMiddleware({
+    app,
+    cors: false,
+  })
 
   app.listen(4000, () => {
     console.log(`server started on http://localhost:4000`)

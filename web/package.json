@@ -11,14 +11,17 @@
     "@chakra-ui/react": "1.8.8",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
-    "@urql/exchange-graphcache": "3.0.2",
+    "@urql/exchange-graphcache": "^4.4.3",
     "formik": "2.1.5",
     "framer-motion": "^6",
-    "graphql": "15.3.0",
+    "graphql": "^16.5.0",
+    "isomorphic-unfetch": "3.0.0",
     "next": "latest",
+    "next-urql": "1.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "urql": "1.10.0"
+    "react-is": "^17.0.0",
+    "urql": "^2.2.2"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "2.6.2",

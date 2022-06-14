@@ -42,7 +42,7 @@ export class UserResolver {
   @FieldResolver(() => String)
   email(@Root() user: User, @Ctx() { req }: MyContext) {
     // this is the current user and its ok to show them their own email
-    if (req.session.userId === user._id) {
+    if (req.session.userId === user.id) {
       return user.email
     }
 
@@ -97,14 +97,14 @@ export class UserResolver {
     }
 
     await User.update(
-      { _id: userIdNum },
+      { id: userIdNum },
       { password: await argon2.hash(newPassword) }
     )
 
     await redis.del(key)
 
     // log in user after changing password
-    req.session.userId = user._id
+    req.session.userId = user.id
 
     return { user }
   }
@@ -124,7 +124,7 @@ export class UserResolver {
 
     await redis.set(
       FORGET_PASSWORD_PREFIX + token,
-      user._id,
+      user.id,
       'EX',
       1000 * 60 * 60 * 24 * 3
     ) // 3 days
@@ -192,7 +192,7 @@ export class UserResolver {
     // store user id session
     // this will set a cookie on the user
     // keep them logged in
-    req.session.userId = user._id
+    req.session.userId = user.id
 
     return { user }
   }
@@ -233,7 +233,7 @@ export class UserResolver {
       }
     }
 
-    req.session!.userId = user._id
+    req.session!.userId = user.id
 
     return {
       user,

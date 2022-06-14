@@ -108,12 +108,12 @@ export const createUrqlClient = (ssrEchange: any, ctx: any) => {
               const data = cache.readFragment(
                 gql`
                   fragment _ on Post {
-                    _id
+                    id
                     points
                     voteStatus
                   }
                 `,
-                { _id: postId } as any
+                { id: postId } as any
               )
 
               if (data) {
@@ -129,7 +129,7 @@ export const createUrqlClient = (ssrEchange: any, ctx: any) => {
                       voteStatus
                     }
                   `,
-                  { _id: postId, points: newPoints, voteStatus: value } as any
+                  { id: postId, points: newPoints, voteStatus: value } as any
                 )
               }
             },

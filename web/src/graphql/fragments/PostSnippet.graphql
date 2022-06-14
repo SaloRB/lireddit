@@ -1,5 +1,5 @@
 fragment PostSnippet on Post {
-  _id
+  id
   createdAt
   updatedAt
   title
@@ -7,7 +7,7 @@ fragment PostSnippet on Post {
   textSnippet
   voteStatus
   creator {
-    _id
+    id
     username
   }
 }

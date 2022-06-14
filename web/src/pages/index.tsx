@@ -45,7 +45,7 @@ const Index = () => {
       ) : (
         <Stack spacing={8}>
           {data!.posts.posts.map((p) => (
-            <Flex key={p._id} p={5} shadow="md" borderWidth="1px">
+            <Flex key={p.id} p={5} shadow="md" borderWidth="1px">
               <UpdootSection post={p} />
               <Box>
                 <Heading fontSize="xl">{p.title}</Heading>

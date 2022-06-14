@@ -16,7 +16,7 @@ import { Updoot } from './Updoot'
 export class User extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
-  _id!: number
+  id!: number
 
   @Field()
   @Column({ unique: true })

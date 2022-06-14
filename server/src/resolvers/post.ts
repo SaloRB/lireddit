@@ -73,7 +73,7 @@ export class PostResolver {
           `
             update post
             set points = points + $1
-            where _id = $2
+            where id = $2
           `,
           [2 * realValue, postId]
         )
@@ -93,7 +93,7 @@ export class PostResolver {
           `
             update post
             set points = points + $1
-            where _id = $2
+            where id = $2
           `,
           [realValue, postId]
         )
@@ -129,7 +129,7 @@ export class PostResolver {
       `
     select p.*,
     json_build_object(
-      '_id', u._id,
+      'id', u.id,
       'username', u.username,
       'email', u.email,
       'createdAt', u."createdAt",
@@ -137,11 +137,11 @@ export class PostResolver {
       ) creator,
     ${
       req.session.userId
-        ? '(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"'
+        ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
         : 'null as "voteStatus"'
     }
     from post p
-    inner join public.user u on u._id = p."creatorId"
+    inner join public.user u on u.id = p."creatorId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ''}
     order by p."createdAt" DESC
     limit $1
@@ -172,8 +172,8 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg('id') _id: number): Promise<Post | undefined> {
-    return Post.findOne(_id)
+  post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
+    return Post.findOne(id, { relations: ['creator'] })
   }
 
   @Mutation(() => Post)
@@ -182,29 +182,32 @@ export class PostResolver {
     @Arg('input') input: PostInput,
     @Ctx() { req }: MyContext
   ): Promise<Post | null> {
-    return Post.create({ ...input, creatorId: req.session.userId }).save()
+    return Post.create({
+      ...input,
+      creatorId: req.session.userId,
+    }).save()
   }
 
   @Mutation(() => Post, { nullable: true })
   async updatePost(
-    @Arg('id') _id: number,
+    @Arg('id') id: number,
     @Arg('title', () => String, { nullable: true }) title: string
   ): Promise<Post | null> {
-    const post = await Post.findOne(_id)
+    const post = await Post.findOne(id)
     if (!post) {
       return null
     }
 
     if (typeof title !== 'undefined') {
-      await Post.update({ _id }, { title })
+      await Post.update({ id }, { title })
     }
 
     return post
   }
 
   @Mutation(() => Boolean)
-  async deletePost(@Arg('id') _id: number): Promise<boolean> {
-    await Post.delete(_id)
+  async deletePost(@Arg('id') id: number): Promise<boolean> {
+    await Post.delete(id)
     return true
   }
 }

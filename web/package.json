@@ -15,6 +15,7 @@
     "formik": "2.1.5",
     "framer-motion": "^6",
     "graphql": "^16.5.0",
+    "graphql-tag": "2.11.0",
     "isomorphic-unfetch": "3.0.0",
     "next": "latest",
     "next-urql": "1.1.0",

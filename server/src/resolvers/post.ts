@@ -1,5 +1,3 @@
-import { isAuth } from '../middleware/isAuth'
-import { MyContext } from '../types'
 import {
   Arg,
   Ctx,
@@ -14,9 +12,11 @@ import {
   Root,
   UseMiddleware,
 } from 'type-graphql'
-import { Post } from '../entities/Post'
 import { getConnection } from 'typeorm'
+import { Post } from '../entities/Post'
 import { Updoot } from '../entities/Updoot'
+import { isAuth } from '../middleware/isAuth'
+import { MyContext } from '../types'
 
 @InputType()
 class PostInput {
@@ -106,39 +106,68 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
+    // 20 -> 21
     const realLimit = Math.min(50, limit)
-    const realLimitPlusOne = realLimit + 1
+    const reaLimitPlusOne = realLimit + 1
 
-    const replacements: any[] = [realLimitPlusOne]
+    const replacements: any[] = [reaLimitPlusOne]
 
+    if (req.session.userId) {
+      replacements.push(req.session.userId)
+    }
+
+    let cursorIndex = 3
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)))
+      cursorIndex = replacements.length
     }
 
     const posts = await getConnection().query(
       `
-        select p.*,
-        json_build_object(
-          '_id', u._id,
-          'username', u.username,
-          'email', u.email,
-          'createdAt', u."createdAt",
-          'updatedAt', u."updatedAt"
-        ) creator 
-        from post p
-        inner join public.user u on u._id = p."creatorId"
-        ${cursor ? `where p."createdAt" < $2` : ''}
-        order by p."createdAt" DESC
-        limit $1
-      `,
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username,
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+      ) creator,
+    ${
+      req.session.userId
+        ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
+        : 'null as "voteStatus"'
+    }
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    ${cursor ? `where p."createdAt" < $${cursorIndex}` : ''}
+    order by p."createdAt" DESC
+    limit $1
+    `,
       replacements
     )
 
+    // const qb = getConnection()
+    //   .getRepository(Post)
+    //   .createQueryBuilder("p")
+    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
+    //   .orderBy('p."createdAt"', "DESC")
+    //   .take(reaLimitPlusOne);
+
+    // if (cursor) {
+    //   qb.where('p."createdAt" < :cursor', {
+    //     cursor: new Date(parseInt(cursor)),
+    //   });
+    // }
+
+    // const posts = await qb.getMany();
+    // console.log("posts: ", posts);
+
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === realLimitPlusOne,
+      hasMore: posts.length === reaLimitPlusOne,
     }
   }
 

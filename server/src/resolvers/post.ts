@@ -137,7 +137,7 @@ export class PostResolver {
       ) creator,
     ${
       req.session.userId
-        ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
+        ? '(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"'
         : 'null as "voteStatus"'
     }
     from post p

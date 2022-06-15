@@ -15,6 +15,7 @@ import {
 import { getConnection } from 'typeorm'
 import { Post } from '../entities/Post'
 import { Updoot } from '../entities/Updoot'
+import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { MyContext } from '../types'
 
@@ -41,6 +42,11 @@ export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() root: Post) {
     return root.text.slice(0, 50)
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(post.creatorId)
   }
 
   @Mutation(() => Boolean)
@@ -128,42 +134,18 @@ export class PostResolver {
     const posts = await getConnection().query(
       `
     select p.*,
-    json_build_object(
-      'id', u.id,
-      'username', u.username,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-      ) creator,
     ${
       req.session.userId
         ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
         : 'null as "voteStatus"'
     }
     from post p
-    inner join public.user u on u.id = p."creatorId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ''}
     order by p."createdAt" DESC
     limit $1
     `,
       replacements
     )
-
-    // const qb = getConnection()
-    //   .getRepository(Post)
-    //   .createQueryBuilder("p")
-    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
-    //   .orderBy('p."createdAt"', "DESC")
-    //   .take(reaLimitPlusOne);
-
-    // if (cursor) {
-    //   qb.where('p."createdAt" < :cursor', {
-    //     cursor: new Date(parseInt(cursor)),
-    //   });
-    // }
-
-    // const posts = await qb.getMany();
-    // console.log("posts: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -173,7 +155,7 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
-    return Post.findOne(id, { relations: ['creator'] })
+    return Post.findOne(id)
   }
 
   @Mutation(() => Post)

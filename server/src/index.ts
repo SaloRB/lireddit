@@ -23,7 +23,7 @@ const main = async () => {
     type: 'postgres',
     url: process.env.DATABASE_URL,
     logging: true,
-    synchronize: true,
+    // synchronize: true,
     migrations: [path.join(__dirname, './migrations/*')],
     entities: [Post, User, Updoot],
   })
@@ -36,6 +36,8 @@ const main = async () => {
 
   const RedisStore = require('connect-redis')(session)
   const redis = new Redis(process.env.REDIS_URL)
+
+  app.set('proxy', 1)
 
   app.use(
     cors({

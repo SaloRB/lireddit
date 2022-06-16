@@ -1,3 +1,4 @@
+import { useApolloClient } from '@apollo/client'
 import { Box, Button, Flex, Heading, Link } from '@chakra-ui/react'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
@@ -9,14 +10,15 @@ interface Navbar {}
 export const Navbar: React.FC<Navbar> = ({}) => {
   const router = useRouter()
 
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation()
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer(),
+  const [logout, { loading: logoutFetching }] = useLogoutMutation()
+  const apolloClient = useApolloClient()
+  const { data, loading } = useMeQuery({
+    skip: isServer(),
   })
   let body = null
 
   // data is loading
-  if (fetching) {
+  if (loading) {
     // user not logged in
   } else if (!data?.me) {
     body = (
@@ -42,7 +44,7 @@ export const Navbar: React.FC<Navbar> = ({}) => {
         <Button
           onClick={async () => {
             await logout()
-            router.reload()
+            await apolloClient.resetStore()
           }}
           variant="link"
           isLoading={logoutFetching}
